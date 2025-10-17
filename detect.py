@@ -1,14 +1,12 @@
 # detect.py
 
 from ultralytics import YOLO
-import numpy as np
-from PIL import Image
 import os
 
-# Load the YOLOv8 model
-model = YOLO("yolov8n.pt")  # You can also use yolov8s.pt, yolov8m.pt, etc.
+# Load YOLOv8 model (it will download if not available)
+model = YOLO("yolov8n.pt")  # You can use yolov8s.pt, yolov8m.pt, etc.
 
-def detect_objects(image_path, target_class="Bottle", save_path=None):
+def detect_objects(image_path, output_path, target_class="person"):
     results = model(image_path)[0]
 
     detections = []
@@ -27,8 +25,7 @@ def detect_objects(image_path, target_class="Bottle", save_path=None):
             "bbox": [x1, y1, x2, y2]
         })
 
-    # Save the image with boxes if path provided
-    if save_path:
-        results.save(filename=save_path)
+    # Save annotated image
+    results.save(filename=output_path)
 
     return detections

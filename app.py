@@ -1,41 +1,56 @@
 # app.py
 
-import streamlit as st
+from flask import Flask, render_template, request, redirect, url_for
 import os
 import uuid
 from detect import detect_objects
-from PIL import Image
 
-# Setup
-st.title("👀 YOLOv8 Object Detection App")
-st.write("Upload an image to detect objects using YOLOv8.")
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'test_data'
+app.config['RESULT_FOLDER'] = 'results'
 
-UPLOAD_DIR = "test_images"
-OUTPUT_DIR = "outputs"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['RESULT_FOLDER'], exist_ok=True)
 
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    image_path = None
+    output_path = None
+    detections = []
 
-if uploaded_file is not None:
-    # Save uploaded image
-    file_ext = uploaded_file.name.split('.')[-1]
-    file_id = str(uuid.uuid4())
-    input_path = os.path.join(UPLOAD_DIR, f"{file_id}.{file_ext}")
-    output_path = os.path.join(OUTPUT_DIR, f"detected_{file_id}.{file_ext}")
+    if request.method == 'POST':
+        file = request.files['image']
+        if file:
+            ext = file.filename.split('.')[-1]
+            uid = str(uuid.uuid4())
+            input_filename = f"{uid}.{ext}"
+            output_filename = f"result_{uid}.{ext}"
 
-    with open(input_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
+            input_path = os.path.join(app.config['UPLOAD_FOLDER'], input_filename)
+            result_path = os.path.join(app.config['RESULT_FOLDER'], output_filename)
 
-    st.image(input_path, caption="Uploaded Image", use_column_width=True)
+            file.save(input_path)
 
-    with st.spinner("Running YOLOv8 detection..."):
-        detections = detect_objects(input_path, target_class="person", save_path=output_path)
+            # Run detection
+            detections = detect_objects(input_path, result_path)
 
-    st.success("Detection complete!")
-    
-    if detections:
-        st.image(output_path, caption="Detected Image", use_column_width=True)
-        st.json(detections)
-    else:
-        st.warning("No 'person' detected in the image.")
+            # For displaying images in browser
+            image_path = '/' + input_path
+            output_path = '/' + result_path
+
+    return render_template('index.html',
+                           image_path=image_path,
+                           output_path=output_path,
+                           detections=detections)
+
+# Serve uploaded images
+@app.route('/test_data/<filename>')
+def uploaded_file(filename):
+    return app.send_static_file(os.path.join('test_data', filename))
+
+@app.route('/results/<filename>')
+def result_file(filename):
+    return app.send_static_file(os.path.join('results', filename))
+
+if __name__ == '__main__':
+    app.run(debug=True)

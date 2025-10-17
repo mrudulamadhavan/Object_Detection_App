@@ -1,5 +1,26 @@
-streamlit
-ultralytics
+# Streamlit app
+streamlit>=1.28.0
+
+# Ultralytics and YOLOv8
+ultralytics>=8.0.0
+
+# Image handling
 pillow
-cv2
+
+# File upload handling (used internally by Streamlit)
+python-multipart
+
+# Required for PyTorch (installed automatically with Ultralytics)
+# Optional to pin Torch version:
+torch>=1.9.0
+torchvision
+
+# For numerical operations (used by YOLO internally)
+numpy
+
+# Image display / manipulation (used indirectly)
+matplotlib
+
+# Optional but recommended for tqdm bars/logging in YOLO
+tqdm
 

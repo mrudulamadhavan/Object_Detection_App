@@ -6,7 +6,7 @@ import os
 # Load YOLOv8 model (it will download if not available)
 model = YOLO("yolov8n.pt")  # You can use yolov8s.pt, yolov8m.pt, etc.
 
-def detect_objects(image_path, output_path, target_class="person"):
+def detect_objects(image_path, output_path, target_class="chair"):
     results = model(image_path)[0]
 
     detections = []
